@@ -27,7 +27,7 @@ questions:
 - variable: setClusterIP
   default: false
   description: "Use custom ClusterIP for service"
-  label: "Use default keydb image"
+  label: "Use ClusterIP"
   type: boolean
   show_subquestion_if: true
   group: "DNS"
