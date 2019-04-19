@@ -1,0 +1,50 @@
+version: '2'
+services:
+  nats-1:
+    image: nats
+    command: -p 4222 --http_port 8080 -cluster nats://0.0.0.0:5222 -routes nats://nats-2:5222,nats://nats-3:5222 -D
+    logging:
+      driver: json-file
+      options:
+        max-file: '1'
+        max-size: 1mb
+  nats-2:
+    image: nats
+    command: -p 4222 --http_port 8080 -cluster nats://0.0.0.0:5222 -routes nats://nats-1:5222,nats://nats-3:5222 -D
+    logging:
+      driver: json-file
+      options:
+        max-file: '1'
+        max-size: 1mb
+  nats-3:
+    image: nats
+    command: -p 4222 --http_port 8080 -cluster nats://0.0.0.0:5222 -routes nats://nats-1:5222,nats://nats-2:5222 -D
+    logging:
+      driver: json-file
+      options:
+        max-file: '1'
+        max-size: 1mb
+  nats: # can scale up
+    image: nats
+    links:
+      - nats-1:nats-1
+      - nats-2:nats-2
+      - nats-3:nats-3
+    command: -p 4222 --http_port 8080 -cluster nats://0.0.0.0:5222 -routes nats://nats-1:5222,nats://nats-2:5222,nats://nats-3:5222 -D
+    logging:
+      driver: json-file
+      options:
+        max-file: '1'
+        max-size: 1mb
+  keydb-cluster-1:
+    image: eqalpha/keydb:x86_64_v0.9.4
+    entrypoint: ["keydb-server"]
+    command: ["/etc/keydb/redis.conf", "--port", "6379", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"]
+  keydb-cluster-2:
+    image: eqalpha/keydb:x86_64_v0.9.4
+    entrypoint: ["keydb-server"]
+    command: ["/etc/keydb/redis.conf", "--port", "6379", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"]
+  keydb-cluster-3:
+    image: eqalpha/keydb:x86_64_v0.9.4
+    entrypoint: ["keydb-server"]
+    command: ["/etc/keydb/redis.conf", "--port", "6379", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"]

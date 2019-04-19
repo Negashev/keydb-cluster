@@ -1,0 +1,4 @@
+asyncio-nats-client
+aioredis
+https://github.com/squeaky-pl/japronto/archive/master.zip
+apscheduler

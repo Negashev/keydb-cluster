@@ -1,0 +1,59 @@
+# Default values for keydb-cluster.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+nats: nats://nats:4222
+image:
+  keydb:
+    repository: eqalpha/keydb
+    tag: x86_64_v0.9.4
+    pullPolicy: IfNotPresent
+  keydb_cluster:
+    repository: negash/keydb-cluster
+    tag: latest
+    pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  keydb: 6379
+  autocluster: 8080
+  # clusterIP:
+
+
+persistence:
+  ## Enable persistence using Persistent Volume Claims.
+  ##
+  enabled: true
+
+  ## Persistent Volume Access Mode.
+  ##
+  accessMode: ReadWriteOnce
+
+  ## Persistant Volume Storage Class Name
+  # storageClassName: "-"
+
+  ## Persistent Volume Storage Size.
+  ##
+  size: 5Gi
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

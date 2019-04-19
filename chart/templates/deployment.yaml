@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "keydb-cluster.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
+    helm.sh/chart: {{ include "keydb-cluster.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-db
+          image: "{{ .Values.image.keydb.repository }}:{{ .Values.image.keydb.tag }}"
+          imagePullPolicy: {{ .Values.image.keydb.pullPolicy }}
+          ports:
+            - name: keydb
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: keydb
+          readinessProbe:
+            tcpSocket:
+              port: keydb
+          command:
+            - "keydb-server"
+          args: ["/etc/keydb/redis.conf", "--port", "6379", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: {{ .Chart.Name }}-operator
+          image: "{{ .Values.image.keydb_cluster.repository }}:{{ .Values.image.keydb_cluster.tag }}"
+          imagePullPolicy: {{ .Values.image.keydb_cluster.pullPolicy }}
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NATS_DSN
+              value: "{{ .Values.nats }}"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: keydb-data
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+        {{- if .Values.persistence.storageClassName }}
+        {{- if (eq "-" .Values.persistence.storageClassName) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.persistence.storageClassName }}"
+        {{- end }}
+        {{- end }}
+{{- end }}
