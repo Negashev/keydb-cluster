@@ -7,12 +7,12 @@ questions:
   show_subquestion_if: false
   group: "Container Images"
   subquestions:
-    - variable: image.keydb.image.repository
+    - variable: image.keydb.repository
       default: "eqalpha/keydb"
       description: "KeyDB Image Repository"
       type: string
       label: "KeyDB Image Repository"
-    - variable: image.keydb.image.tag
+    - variable: image.keydb.tag
       default: "x86_64_v0.9.4"
       description: "KeyDB Image Tag"
       type: string
