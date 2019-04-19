@@ -39,7 +39,24 @@ spec:
               port: keydb
           command:
             - "keydb-server"
-          args: ["/etc/keydb/redis.conf", "--port", "6379", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"]
+          args:
+            - "/etc/keydb/redis.conf"
+            - "--port"
+            - "6379"
+            - "--active-replica"
+            - "yes"
+            - "--multi-master"
+            - "yes"
+            - "--replica-read-only"
+            - "no"
+            - "--protected-mode"
+            - "no"
+            - "--bind"
+            - "0.0.0.0"
+            {{- if .Values.password }}
+            - "requirepass"
+            - "{{ .Values.password }}"
+            {{- end -}}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
         - name: {{ .Chart.Name }}-operator
@@ -54,6 +71,8 @@ spec:
               value: "$(POD_NAME).{{ include "keydb-cluster.fullname" . }}-headless"
             - name: KEYDB_NATS_DSN
               value: "{{ .Values.nats }}"
+            - name: KEYDB_PASSWORD
+              value: "{{ .Values.password }}"
           ports:
             - name: http
               containerPort: 8080

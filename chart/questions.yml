@@ -37,3 +37,16 @@ questions:
       description: "KeyDB clusterIP for service"
       type: string
       label: "KeyDB clusterIP"
+- variable: setPassword
+  default: false
+  description: "Use Authorisation"
+  label: "add password for keydb cluster"
+  type: boolean
+  show_subquestion_if: true
+  group: "Authorisation"
+  subquestions:
+    - variable: password
+      default: ""
+      description: "Set password for keydb cluster"
+      type: string
+      label: "KeyDB password"

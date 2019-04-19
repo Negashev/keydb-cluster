@@ -11,7 +11,7 @@ IP = os.getenv("MY_POD_IP", socket.gethostbyname(socket.gethostname()))
 NATS_DSN = os.getenv("KEYDB_NATS_DSN", "nats://nats:4222")
 MY_UUID = os.getenv('KEYDB_UUID', None)
 KEYDB_PASSWORD = os.getenv('KEYDB_PASSWORD', None)
-if KEYDB_PASSWORD is not None:
+if KEYDB_PASSWORD not in [None, ""]:
     KEYDB_PASSWORD = f"{KEYDB_PASSWORD}:"
 else:
     KEYDB_PASSWORD = ""
