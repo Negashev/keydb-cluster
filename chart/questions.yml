@@ -1,22 +1,22 @@
 questions:
-  - variable: defaultKeydbImage
-    default: true
-    description: "Use default KeyDB image or specify a custom one"
-    label: "Use default keydb image"
-    type: boolean
-    show_subquestion_if: false
-    group: "Container Images"
-    subquestions:
-      - variable: image.keydb.image.repository
-        default: "eqalpha/keydb"
-        description: "KeyDB Image Repository"
-        type: string
-        label: "KeyDB Image Repository"
-      - variable: image.keydb.image.tag
-        default: "x86_64_v0.9.4"
-        description: "KeyDB Image Tag"
-        type: string
-        label: "KeyDB Image Tag"
+- variable: defaultKeydbImage
+  default: true
+  description: "Use default KeyDB image or specify a custom one"
+  label: "Use default keydb image"
+  type: boolean
+  show_subquestion_if: false
+  group: "Container Images"
+  subquestions:
+    - variable: image.keydb.image.repository
+      default: "eqalpha/keydb"
+      description: "KeyDB Image Repository"
+      type: string
+      label: "KeyDB Image Repository"
+    - variable: image.keydb.image.tag
+      default: "x86_64_v0.9.4"
+      description: "KeyDB Image Tag"
+      type: string
+      label: "KeyDB Image Tag"
 - variable: nats
   default: "nats://nats:4222"
   description: "Enter nats dsn string"
