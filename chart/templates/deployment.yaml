@@ -46,7 +46,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: NATS_DSN
+            - name: KEYDB_NATS_DSN
               value: "{{ .Values.nats }}"
           ports:
             - name: http
