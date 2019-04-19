@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  serviceName: {{ include "keydb-cluster.fullname" . }}-headless
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
