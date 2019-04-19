@@ -24,3 +24,16 @@ questions:
   label: "NATS connection"
   group: "Configuration"
   required: true
+- variable: setClusterIP
+  default: false
+  description: "Use custom ClusterIP for service"
+  label: "Use default keydb image"
+  type: boolean
+  show_subquestion_if: true
+  group: "DNS"
+  subquestions:
+    - variable: service.clusterIP
+      default: ""
+      description: "KeyDB clusterIP for service"
+      type: string
+      label: "KeyDB clusterIP"
