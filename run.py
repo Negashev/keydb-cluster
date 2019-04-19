@@ -12,15 +12,15 @@ NATS_DSN = os.getenv("KEYDB_NATS_DSN", "nats://nats:4222")
 MY_UUID = os.getenv('KEYDB_UUID', None)
 KEYDB_PASSWORD = os.getenv('KEYDB_PASSWORD', None)
 if KEYDB_PASSWORD not in [None, ""]:
-    KEYDB_PASSWORD = f"{KEYDB_PASSWORD}@"
+    KEYDB_PASSWORD = KEYDB_PASSWORD
 else:
-    KEYDB_PASSWORD = ""
+    KEYDB_PASSWORD = None
 
 
 async def get_replication(request):
     global KEYDB_PASSWORD
     global IP
-    conn = await aioredis.create_redis(f'redis://{KEYDB_PASSWORD}{IP}')
+    conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD)
     val = await conn.info('replication')
     replication = val['replication']
     conn.close()
@@ -46,7 +46,7 @@ async def add_replicaof(msg):
     global IP
     master_ip = msg.data.decode()
     # don't make local replica
-    conn = await aioredis.create_redis(f'redis://{KEYDB_PASSWORD}{IP}')
+    conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD)
     replicaof = await conn.execute('REPLICAOF', master_ip, 6379)
     print('replicaof', master_ip, 6379, replicaof.decode())
     conn.close()
@@ -59,7 +59,7 @@ async def get_keydb_id(app):
     global IP
     if MY_UUID is not None:
         return MY_UUID
-    conn = await aioredis.create_redis(f'redis://{KEYDB_PASSWORD}{IP}', loop=app.loop)
+    conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, loop=app.loop)
     val = await conn.info('server')
     MY_UUID = 'keydb-cluster-' + val['server']['run_id']
     conn.close()
