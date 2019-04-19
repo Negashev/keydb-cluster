@@ -45,10 +45,12 @@ spec:
           image: "{{ .Values.image.keydb_cluster.repository }}:{{ .Values.image.keydb_cluster.tag }}"
           imagePullPolicy: {{ .Values.image.keydb_cluster.pullPolicy }}
           env:
-            - name: MY_POD_IP
+            - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: MY_POD_IP
+              value: "$(POD_NAME).{{ include "keydb-cluster.fullname" . }}-headless"
             - name: KEYDB_NATS_DSN
               value: "{{ .Values.nats }}"
           ports:
