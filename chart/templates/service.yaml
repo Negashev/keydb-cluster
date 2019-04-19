@@ -16,11 +16,11 @@ spec:
   {{end}}
   ports:
     - port: {{ .Values.service.keydb }}
-      targetPort: keydb
+      targetPort: {{ .Values.service.keydb }}
       protocol: TCP
       name: keydb
     - port: {{ .Values.service.autocluster }}
-      targetPort: http
+      targetPort: {{ .Values.service.autocluster }}
       protocol: TCP
       name: http
   selector:
