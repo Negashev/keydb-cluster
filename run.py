@@ -1,5 +1,6 @@
 import json
 import os
+import asyncio
 
 from japronto import Application
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -37,6 +38,7 @@ async def new_server(msg):
     print(f"two bind {new_server['MY_UUID']} ({new_server['IP']})<-->{MY_UUID} ({IP})")
     # add_replicaof fo external
     await nc.publish(new_server['MY_UUID'], bytes(IP, 'utf-8'))
+    await asyncio.sleep(int(os.getenv("KEYDB_REPLICAOF_SLEEP", "10")))
     # add_replicaof fo me
     await nc.publish(MY_UUID, bytes(new_server['IP'], 'utf-8'))
 
