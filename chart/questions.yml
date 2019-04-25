@@ -24,6 +24,13 @@ questions:
   label: "NATS connection"
   group: "Configuration"
   required: true
+- variable: replicaCount
+  default: 2
+  description: "Set the number of KeyDB to be started"
+  label: "KeyDB count"
+  type: int
+  group: "Configuration"
+  required: true
 - variable: setClusterIP
   default: false
   description: "Use custom ClusterIP for service"
@@ -50,3 +57,15 @@ questions:
       description: "Set password for keydb cluster"
       type: string
       label: "KeyDB password"
+- variable: placement.key
+  default: "nodepool"
+  description: "Set matchExpressions.key"
+  type: string
+  label: "nodeSelectorTerms key"
+  group: "Placement"
+- variable: placement.value
+  default: "keydb"
+  description: "Set matchExpressions.value"
+  type: string
+  label: "nodeSelectorTerms value"
+  group: "Placement"

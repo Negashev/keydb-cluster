@@ -20,6 +20,15 @@ spec:
         app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: {{ .Values.placement.key }}
+                    operator: In
+                    values:
+                      - {{ .Values.placement.value }}
       containers:
         - name: {{ .Chart.Name }}-db
           image: "{{ .Values.image.keydb.repository }}:{{ .Values.image.keydb.tag }}"

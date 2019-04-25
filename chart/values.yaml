@@ -5,6 +5,9 @@
 replicaCount: 2
 nats: nats://nats:4222
 password: ""
+placement:
+  key: nodepool
+  value: keydb
 image:
   keydb:
     repository: eqalpha/keydb
