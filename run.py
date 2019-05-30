@@ -6,6 +6,7 @@ from japronto import Application
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from nats.aio.client import Client as NATS
 import aioredis
+import time
 import socket
 
 IP = os.getenv("MY_POD_IP", socket.gethostbyname(socket.gethostname()))
@@ -17,6 +18,26 @@ if KEYDB_PASSWORD not in [None, ""]:
 else:
     KEYDB_PASSWORD = None
 
+
+async def wait_for_port(port, host='localhost', timeout=5.0):
+    """Wait until a port starts accepting TCP connections.
+    Args:
+        port (int): Port number.
+        host (str): Host address on which the port should exist.
+        timeout (float): In seconds. How long to wait before raising errors.
+    Raises:
+        TimeoutError: The port isn't accepting connection after time specified in `timeout`.
+    """
+    start_time = time.perf_counter()
+    while True:
+        try:
+            with socket.create_connection((host, port), timeout=timeout):
+                break
+        except OSError as ex:
+            time.sleep(1)
+            if time.perf_counter() - start_time >= timeout:
+                print('Waited too long for the port {} on host {} to start accepting '
+                                   'connections.'.format(port, host))
 
 async def get_replication(request):
     global KEYDB_PASSWORD
@@ -81,18 +102,27 @@ async def connect_nats(app):
     # add nats to japronto app
     app.extend_request(lambda x: nc, name='nc', property=True)
 
-# TODO Remove offline redis master
-# async def connect_scheduler():
-#     scheduler = AsyncIOScheduler(timezone="UTC")
-#     scheduler.add_job(remove_slave, 'interval', seconds=30)
-#     scheduler.start()
+
+async def ping_primary():
+    global MY_UUID
+    global IP
+    print('ping new_server')
+    await nc.publish('new_server', bytes(json.dumps({"MY_UUID": MY_UUID, "IP": IP}), 'utf-8'))
+
+
+async def connect_scheduler():
+    scheduler = AsyncIOScheduler(timezone="UTC")
+    scheduler.add_job(ping_primary, 'interval', seconds=30)
+    scheduler.start()
+
 
 print(IP)
 app = Application()
 nc = NATS()
+app.loop.run_until_complete(wait_for_port(6379))
 app.loop.run_until_complete(get_keydb_id(app))
 app.loop.run_until_complete(connect_nats(app))
-# app.loop.run_until_complete(connect_scheduler())
+app.loop.run_until_complete(connect_scheduler())
 r = app.router
 r.add_route('/', get_replication)
 
