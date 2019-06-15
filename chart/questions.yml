@@ -13,7 +13,7 @@ questions:
       type: string
       label: "KeyDB Image Repository"
     - variable: image.keydb.tag
-      default: "x86_64_v0.9.4"
+      default: "x86_64_v0.9.5"
       description: "KeyDB Image Tag"
       type: string
       label: "KeyDB Image Tag"

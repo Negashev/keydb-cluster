@@ -11,7 +11,7 @@ placement:
 image:
   keydb:
     repository: eqalpha/keydb
-    tag: x86_64_v0.9.4
+    tag: x86_64_v0.9.5
     pullPolicy: IfNotPresent
   keydb_cluster:
     repository: negash/keydb-cluster
