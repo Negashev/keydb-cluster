@@ -37,14 +37,14 @@ services:
         max-file: '1'
         max-size: 1mb
   keydb-cluster-1:
-    image: eqalpha/keydb:x86_64_v0.9.4
+    image: eqalpha/keydb:x86_64_v0.9.5
     entrypoint: ["keydb-server"]
-    command: ["/etc/keydb/redis.conf", "--port", "6379", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"]
+    command: ["/etc/keydb/redis.conf", "--port", "6379", "--multi-master", "yes", "--protected-mode", "no", "--bind", "0.0.0.0"]
   keydb-cluster-2:
-    image: eqalpha/keydb:x86_64_v0.9.4
+    image: eqalpha/keydb:x86_64_v0.9.5
     entrypoint: ["keydb-server"]
-    command: ["/etc/keydb/redis.conf", "--port", "6379", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"]
+    command: ["/etc/keydb/redis.conf", "--port", "6379", "--multi-master", "yes", "--protected-mode", "no", "--bind", "0.0.0.0"]
   keydb-cluster-3:
-    image: eqalpha/keydb:x86_64_v0.9.4
+    image: eqalpha/keydb:x86_64_v0.9.5
     entrypoint: ["keydb-server"]
-    command: ["/etc/keydb/redis.conf", "--port", "6379", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"]
+    command: ["/etc/keydb/redis.conf", "--port", "6379", "--multi-master", "yes", "--protected-mode", "no", "--bind", "0.0.0.0"]

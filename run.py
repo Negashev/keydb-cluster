@@ -70,8 +70,20 @@ async def add_replicaof(msg):
     master_ip = msg.data.decode()
     # don't make local replica
     conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD)
-    replicaof = await conn.execute('REPLICAOF', master_ip, 6379)
-    print('replicaof', master_ip, 6379, replicaof.decode())
+    set_replicaof = True
+    # check if master_ip exist
+    replication = await conn.execute('info', 'replication')
+    for line in replication.decode().splitlines():
+        if line.startwith('master_host'):
+            master_host, ip = line.split(':')
+            if ip == master_ip:
+                set_replicaof = False
+                print('replicaof', master_ip, 6379, "not set, Already exist")
+                break
+    # start replicaof
+    if set_replicaof:
+        replicaof = await conn.execute('REPLICAOF', master_ip, 6379)
+        print('replicaof', master_ip, 6379, replicaof.decode())
     conn.close()
     await conn.wait_closed()
 
