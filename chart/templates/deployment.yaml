@@ -48,7 +48,7 @@ spec:
               port: keydb
           command:
             - "keydb-server"
-          args: ["/etc/keydb/redis.conf", "--port", "6379", "--version-override", "5.0.0", "--multi-master", "yes", "--protected-mode", "no", "--bind", "0.0.0.0"{{- if .Values.password }}, "--requirepass", "{{ .Values.password }}", "--masterauth", "{{ .Values.password }}"{{- end -}}]
+          args: ["/etc/keydb/redis.conf", "--port", "6379", "--version-override", "5.0.0", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"{{- if .Values.password }}, "--requirepass", "{{ .Values.password }}", "--masterauth", "{{ .Values.password }}"{{- end -}}]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
         - name: {{ .Chart.Name }}-operator
