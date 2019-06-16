@@ -42,7 +42,7 @@ persistence:
 
   ## Persistent Volume Storage Size.
   ##
-  size: 5Gi
+  size: 10Gi
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

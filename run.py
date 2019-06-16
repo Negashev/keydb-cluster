@@ -18,6 +18,7 @@ if KEYDB_PASSWORD not in [None, ""]:
 else:
     KEYDB_PASSWORD = None
 
+READY_TO_BY_PRIMARY = False
 
 async def wait_for_port(port, host='localhost', timeout=5.0):
     """Wait until a port starts accepting TCP connections.
@@ -29,6 +30,7 @@ async def wait_for_port(port, host='localhost', timeout=5.0):
         TimeoutError: The port isn't accepting connection after time specified in `timeout`.
     """
     start_time = time.perf_counter()
+    print('waiting local redis')
     while True:
         try:
             with socket.create_connection((host, port), timeout=timeout):
@@ -38,23 +40,43 @@ async def wait_for_port(port, host='localhost', timeout=5.0):
             if time.perf_counter() - start_time >= timeout:
                 print('Waited too long for the port {} on host {} to start accepting '
                                    'connections.'.format(port, host))
+    print('local redis is up')
+    time.sleep(1)
+    while True:
+        try:
+            conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, timeout=10)
+            val = await conn.info('replication')
+            replication = val['replication']
+            conn.close()
+            await conn.wait_closed()
+            break
+        except Exception as e:
+            time.sleep(1)
+    print('local redis is ready')
 
 async def get_replication(request):
     global KEYDB_PASSWORD
     global IP
+    global READY_TO_BY_PRIMARY
     conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, timeout=10)
     val = await conn.info('replication')
     replication = val['replication']
     conn.close()
     await conn.wait_closed()
-    return request.Response(json=replication)
+    code = 200
+    if not READY_TO_BY_PRIMARY:
+        code = 400
+    return request.Response(json=replication, code=code)
 
 
 async def new_server(msg):
     global IP
     global MY_UUID
+    global READY_TO_BY_PRIMARY
     new_server = json.loads(msg.data.decode())
     if new_server['MY_UUID'] == MY_UUID:
+        return
+    if not READY_TO_BY_PRIMARY:
         return
     print(f"two bind {new_server['MY_UUID']} ({new_server['IP']})<-->{MY_UUID} ({IP})")
     # add_replicaof fo external
@@ -67,8 +89,8 @@ async def new_server(msg):
 async def add_replicaof(msg):
     global KEYDB_PASSWORD
     global IP
+    global READY_TO_BY_PRIMARY
     master_ip = msg.data.decode()
-    print(f'add_replicaof({master_ip})')
     # don't make local replica
     conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, timeout=10)
     set_replicaof = True
@@ -84,6 +106,7 @@ async def add_replicaof(msg):
     # start replicaof
     if set_replicaof:
         replicaof = await conn.execute('REPLICAOF', master_ip, 6379)
+        READY_TO_BY_PRIMARY = False
         print('replicaof', master_ip, 6379, replicaof.decode())
     conn.close()
     await conn.wait_closed()
@@ -111,7 +134,7 @@ async def connect_nats(app):
     print(MY_UUID)
     await nc.subscribe(MY_UUID, cb=add_replicaof)
     await nc.subscribe('new_server', cb=new_server)
-    await nc.publish('new_server', bytes(json.dumps({"MY_UUID": MY_UUID, "IP": IP}), 'utf-8'))
+    # await nc.publish('new_server', bytes(json.dumps({"MY_UUID": MY_UUID, "IP": IP}), 'utf-8'))
     # add nats to japronto app
     app.extend_request(lambda x: nc, name='nc', property=True)
 
@@ -119,13 +142,31 @@ async def connect_nats(app):
 async def ping_primary():
     global MY_UUID
     global IP
-    print('ping new_server')
-    await nc.publish('new_server', bytes(json.dumps({"MY_UUID": MY_UUID, "IP": IP}), 'utf-8'))
+    global READY_TO_BY_PRIMARY
+    conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, timeout=10)
+    # check if master sync
+    master_sync_left_bytes_status = True
+    master_ip = 'master'
+    replication = await conn.execute('info', 'replication')
+    for line in replication.decode().splitlines():
+        if line.startswith('master_host'):
+            master_host, master_ip = line.split(':')
+        if line.startswith('master_sync_left_bytes'):
+            master_sync_left_bytes, left_bytes = line.split(':')
+            left_bytes = int(left_bytes)
+            if left_bytes != 0:
+                print(f'Server sync with {master_ip} not ready master_sync_left_bytes={left_bytes}')
+                master_sync_left_bytes_status = False
+    conn.close()
+    await conn.wait_closed()
+    READY_TO_BY_PRIMARY = master_sync_left_bytes_status
+    if READY_TO_BY_PRIMARY:
+        await nc.publish('new_server', bytes(json.dumps({"MY_UUID": MY_UUID, "IP": IP}), 'utf-8'))
 
 
 async def connect_scheduler():
     scheduler = AsyncIOScheduler(timezone="UTC")
-    scheduler.add_job(ping_primary, 'interval', seconds=30)
+    scheduler.add_job(ping_primary, 'interval', seconds=10)
     scheduler.start()
 
 

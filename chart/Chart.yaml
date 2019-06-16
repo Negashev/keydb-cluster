@@ -2,5 +2,5 @@ apiVersion: v1
 appVersion: "0.9.5"
 description: A KeyDB cluster chart for Kubernetes
 name: keydb-cluster
-version: 0.1.1
+version: 0.1.2
 icon: https://keydb.dev/assets/img/slides/keydbwhite.png
