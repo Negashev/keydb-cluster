@@ -63,10 +63,7 @@ async def get_replication(request):
     replication = val['replication']
     conn.close()
     await conn.wait_closed()
-    code = 200
-    if not READY_TO_BY_PRIMARY:
-        code = 400
-    return request.Response(json=replication, code=code)
+    return request.Response(json=replication)
 
 
 async def new_server(msg):
