@@ -33,9 +33,11 @@ spec:
         - name: {{ .Chart.Name }}-db
           image: "{{ .Values.image.keydb.repository }}:{{ .Values.image.keydb.tag }}"
           imagePullPolicy: {{ .Values.image.keydb.pullPolicy }}
+{{- if .Values.persistence.enabled }}
           volumeMounts:
             - name: keydb-data
               mountPath: /data
+{{- end }}
           ports:
             - name: keydb
               containerPort: 6379
