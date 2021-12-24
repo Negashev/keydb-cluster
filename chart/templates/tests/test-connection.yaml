@@ -14,5 +14,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args:  ['{{ include "keydb-cluster.fullname" . }}:{{ .Values.service.port }}']
+      args:  ['{{ include "keydb-cluster.fullname" . }}:{{ .Values.service.autocluster }}']
   restartPolicy: Never

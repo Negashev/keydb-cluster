@@ -44,11 +44,9 @@ async def wait_for_port(port, host='localhost', timeout=5.0):
     time.sleep(1)
     while True:
         try:
-            conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, timeout=10)
-            val = await conn.info('replication')
-            replication = val['replication']
-            conn.close()
-            await conn.wait_closed()
+            conn = await aioredis.from_url(f'redis://{IP}', password=KEYDB_PASSWORD)
+            replication = await conn.info('replication')
+            await conn.close()
             break
         except Exception as e:
             time.sleep(1)
@@ -58,11 +56,9 @@ async def get_replication(request):
     global KEYDB_PASSWORD
     global IP
     global READY_TO_BY_PRIMARY
-    conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, timeout=10)
-    val = await conn.info('replication')
-    replication = val['replication']
-    conn.close()
-    await conn.wait_closed()
+    conn = await aioredis.from_url(f'redis://{IP}', password=KEYDB_PASSWORD)
+    replication = await conn.info('replication')
+    await conn.close()
     return request.Response(json=replication)
 
 
@@ -89,24 +85,23 @@ async def add_replicaof(msg):
     global READY_TO_BY_PRIMARY
     master_ip = msg.data.decode()
     # don't make local replica
-    conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, timeout=10)
+    conn = await aioredis.from_url(f'redis://{IP}', password=KEYDB_PASSWORD)
     set_replicaof = True
     # check if master_ip exist
-    replication = await conn.execute('info', 'replication')
-    for line in replication.decode().splitlines():
-        if line.startswith('master_host'):
-            master_host, ip = line.split(':')
+    replication = await conn.info('replication')
+    for key, value in replication.items():
+        if key.startswith('master_host'):
+            ip = value
             if ip == master_ip:
                 set_replicaof = False
                 print('replicaof', master_ip, 6379, "not set, Already exist")
                 break
     # start replicaof
     if set_replicaof:
-        replicaof = await conn.execute('REPLICAOF', master_ip, 6379)
+        replicaof = await conn.execute_command('REPLICAOF', master_ip, 6379)
         READY_TO_BY_PRIMARY = False
         print('replicaof', master_ip, 6379, replicaof.decode())
-    conn.close()
-    await conn.wait_closed()
+    await conn.close()
 
 
 async def get_keydb_id(app):
@@ -115,11 +110,10 @@ async def get_keydb_id(app):
     global IP
     if MY_UUID is not None:
         return MY_UUID
-    conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, loop=app.loop, timeout=10)
+    conn = await aioredis.from_url(f'redis://{IP}', password=KEYDB_PASSWORD)
     val = await conn.info('server')
-    MY_UUID = 'keydb-cluster-' + val['server']['run_id']
-    conn.close()
-    await conn.wait_closed()
+    MY_UUID = 'keydb-cluster-' + val['run_id']
+    await conn.close()
 
 
 async def connect_nats(app):
@@ -140,22 +134,21 @@ async def ping_primary():
     global MY_UUID
     global IP
     global READY_TO_BY_PRIMARY
-    conn = await aioredis.create_redis(f'redis://{IP}', password=KEYDB_PASSWORD, timeout=10)
+    conn = await aioredis.from_url(f'redis://{IP}', password=KEYDB_PASSWORD)
     # check if master sync
     master_sync_left_bytes_status = True
     master_ip = 'master'
-    replication = await conn.execute('info', 'replication')
-    for line in replication.decode().splitlines():
-        if line.startswith('master_host'):
-            master_host, master_ip = line.split(':')
-        if line.startswith('master_sync_left_bytes'):
-            master_sync_left_bytes, left_bytes = line.split(':')
+    replication = await conn.info('replication')
+    for key, value in replication.items():
+        if key.startswith('master_host'):
+            master_ip = value
+        if key.startswith('master_sync_left_bytes'):
+            left_bytes = value
             left_bytes = int(left_bytes)
             if left_bytes != 0:
                 print(f'Server sync with {master_ip} not ready master_sync_left_bytes={left_bytes}')
                 master_sync_left_bytes_status = False
-    conn.close()
-    await conn.wait_closed()
+    await conn.close()
     READY_TO_BY_PRIMARY = master_sync_left_bytes_status
     if READY_TO_BY_PRIMARY:
         await nc.publish('new_server', bytes(json.dumps({"MY_UUID": MY_UUID, "IP": IP}), 'utf-8'))

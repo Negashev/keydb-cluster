@@ -43,6 +43,7 @@ spec:
       targetPort: {{ .Values.service.keydb }}
       protocol: TCP
       name: keydb
+  publishNotReadyAddresses: true
   selector:
     app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

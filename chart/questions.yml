@@ -57,15 +57,3 @@ questions:
       description: "Set password for keydb cluster"
       type: string
       label: "KeyDB password"
-- variable: placement.key
-  default: "nodepool"
-  description: "Set matchExpressions.key"
-  type: string
-  label: "nodeSelectorTerms key"
-  group: "Placement"
-- variable: placement.value
-  default: "keydb"
-  description: "Set matchExpressions.value"
-  type: string
-  label: "nodeSelectorTerms value"
-  group: "Placement"

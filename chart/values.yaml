@@ -5,13 +5,10 @@
 replicaCount: 2
 nats: nats://nats:4222
 password: ""
-placement:
-  key: nodepool
-  value: keydb
 image:
   keydb:
     repository: eqalpha/keydb
-    tag: x86_64_v0.9.5
+    tag: x86_64_v6.2.1
     pullPolicy: IfNotPresent
   keydb_cluster:
     repository: negash/keydb-cluster
@@ -20,6 +17,16 @@ image:
 
 nameOverride: ""
 fullnameOverride: ""
+
+threads: 2
+
+multiMaster: "yes"
+activeReplicas: "yes"
+protectedMode: "no"
+appendonly: "no"
+
+
+configExtraArgs: []
 
 service:
   type: ClusterIP

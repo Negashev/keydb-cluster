@@ -20,24 +20,15 @@ spec:
         app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: {{ .Values.placement.key }}
-                    operator: In
-                    values:
-                      - {{ .Values.placement.value }}
       containers:
         - name: {{ .Chart.Name }}-db
           image: "{{ .Values.image.keydb.repository }}:{{ .Values.image.keydb.tag }}"
           imagePullPolicy: {{ .Values.image.keydb.pullPolicy }}
-{{- if .Values.persistence.enabled }}
+          {{- if .Values.persistence.enabled }}
           volumeMounts:
             - name: keydb-data
               mountPath: /data
-{{- end }}
+          {{- end }}
           ports:
             - name: keydb
               containerPort: 6379
@@ -50,7 +41,29 @@ spec:
               port: keydb
           command:
             - "keydb-server"
-          args: ["/etc/keydb/redis.conf", "--port", "6379", "--version-override", "5.0.0", "--active-replica", "yes", "--multi-master", "yes", "--replica-read-only", "no", "--protected-mode", "no", "--bind", "0.0.0.0"{{- if .Values.password }}, "--requirepass", "{{ .Values.password }}", "--masterauth", "{{ .Values.password }}"{{- end -}}]
+          args: 
+            - "/etc/keydb/redis.conf"
+            - --active-replica {{ .Values.activeReplicas | quote }}
+            - --multi-master {{ .Values.multiMaster | quote }}
+            - --appendonly {{ .Values.appendonly | quote }}
+            - --bind "0.0.0.0"
+            - --port "6379"
+            - --protected-mode {{ .Values.protectedMode | quote }}
+            {{- if .Values.password }}
+            - --requirepass {{ .Values.password }}
+            - --masterauth {{ .Values.password }}
+            {{- end }}
+            {{- range $item := .Values.configExtraArgs }}
+            {{- range $key, $value := $item }}
+            {{- if kindIs "invalid" $value }}
+            - --{{ $key }}
+            {{- else if kindIs "slice" $value }}
+            - --{{ $key }}{{ range $value }} {{ . | quote }}{{ end }}
+            {{- else }}
+            - --{{ $key }} {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
         - name: {{ .Chart.Name }}-operator
