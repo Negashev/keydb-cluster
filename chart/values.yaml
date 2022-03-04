@@ -9,7 +9,7 @@ password: ""
 image:
   keydb:
     repository: eqalpha/keydb
-    tag: x86_64_v6.2.1
+    tag: alpine_x86_64_v6.2.2
     pullPolicy: IfNotPresent
   keydb_cluster:
     repository: negash/keydb-cluster
