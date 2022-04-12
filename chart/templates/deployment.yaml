@@ -3,6 +3,7 @@ kind: StatefulSet
 metadata:
   name: {{ include "keydb-cluster.fullname" . }}
   labels:
+    app: keydb
     app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
     helm.sh/chart: {{ include "keydb-cluster.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -11,11 +12,13 @@ spec:
   serviceName: {{ include "keydb-cluster.fullname" . }}-headless
   selector:
     matchLabels:
+      app: keydb
       app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
+        app: keydb
         app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
@@ -72,9 +75,16 @@ spec:
             - name: POD_NAME
               valueFrom:
                 fieldRef:
-                  fieldPath: metadata.name
+                  fieldPath: metadata.name      
+            {{- if .Values.useK8sIp }}
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            {{- else }}
             - name: MY_POD_IP
               value: "$(POD_NAME).{{ include "keydb-cluster.fullname" . }}-headless"
+            {{- end }}
             - name: KEYDB_NATS_DSN
               value: "{{ .Values.nats }}"
             - name: KEYDB_PASSWORD
