@@ -6,7 +6,6 @@ metadata:
     app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
     helm.sh/chart: {{ include "keydb-cluster.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
   annotations:
     "helm.sh/hook": test-success
 spec:

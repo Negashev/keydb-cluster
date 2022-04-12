@@ -6,7 +6,6 @@ metadata:
     app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
     helm.sh/chart: {{ include "keydb-cluster.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   serviceName: {{ include "keydb-cluster.fullname" . }}-headless
