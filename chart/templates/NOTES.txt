@@ -1,1 +1,0 @@
-Start Keydb-cluster application
