@@ -3,24 +3,25 @@ kind: StatefulSet
 metadata:
   name: {{ include "keydb-cluster.fullname" . }}
   labels:
-    app: keydb
-    app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
-    helm.sh/chart: {{ include "keydb-cluster.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app: {{ template "keydb-cluster.name" . }}
+    chart: {{ template "keydb-cluster.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   serviceName: {{ include "keydb-cluster.fullname" . }}-headless
   selector:
     matchLabels:
-      app: keydb
-      app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      app: {{ template "keydb-cluster.name" . }}
+      release: {{ .Release.Name }}
+      component: keydb
   template:
     metadata:
       labels:
-        app: keydb
-        app.kubernetes.io/name: {{ include "keydb-cluster.name" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        app: {{ template "keydb-cluster.name" . }}
+        release: {{ .Release.Name }}
+        component: keydb
+        stolon-cluster: {{ template "keydb-cluster.fullname" . }}
     spec:
       containers:
         - name: {{ .Chart.Name }}-db
