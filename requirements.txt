@@ -2,3 +2,4 @@ asyncio-nats-client
 aioredis
 https://github.com/squeaky-pl/japronto/archive/master.zip
 apscheduler
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
